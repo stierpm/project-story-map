@@ -1,0 +1,205 @@
+{#
+/**
+ * @file
+ * Organism component for Story Map
+ *
+ * Available props:
+ * - story_map_attributes: [array] Any custom attributes needed for this Pullquote.
+ * - story_map_content: [array] Expecting the render array of map content.
+ * - story_map_description: [string] Expecting a description for this map component.
+ * - story_map_heading: [string] Expecting the primary heading for this map component.
+ *
+ * Available slots:
+ * - story_map_content
+ */
+#}
+
+{% set classes = [
+    'o-story-map',
+] %}
+
+<div {{ story_map_attributes.addClass(classes) }}>
+    {% if story_map_heading is not empty %}
+        <h2 class="o-story-map__heading">{{ story_map_heading }}</h2>
+    {% endif %}
+
+    {% if story_map_description is not empty %}
+        <div class="o-story-map__description">
+            {{ story_map_description }}
+        </div>
+    {% endif %}
+
+    {% if story_map_content is not empty %}
+        <div class="o-story-map__actions">
+            <div class="o-story-map__actions-divider"></div>
+            <button class="o-story-map__map-view-trigger is-active" aria-haspopup="true" aria-expanded="true">{{ 'Map View'|t }}</button>
+            <button class="o-story-map__list-view-trigger" aria-haspopup="true" aria-expanded="false">{{ 'List View'|t }}</button>
+        </div>
+    {% endif %}
+
+    {% block story_map_content %}
+        <div class="o-story-map__frame">
+            <button id="target-world"
+                    class="visually-hidden"
+                    tabindex="-1">
+                {{ 'Now viewing the world map'|t }}
+            </button>
+
+            <div class="o-story-map__world is-active">
+                <div class="o-story-map__world-map-wrapper">
+                    {% for parent_region in story_map_content %}
+                        <button class="o-story-map__region-trigger o-story-map__region-trigger--{{ parent_region.machine_name }}"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                aria-controls="map-{{ parent_region.machine_name }}, content-{{ parent_region.machine_name }}"
+                                data-next-focus="target-{{ parent_region.machine_name }}"
+                                style="inset-inline-start: {{ parent_region.x }}%; inset-block-end: {{ parent_region.y }}%;">
+                            {{ parent_region.label }}
+                        </button>
+                    {% endfor %}
+
+                    {{ source('themes/custom/tufts_rii/components/03-organisms/story-map/img/map-world.svg') }}
+                </div>
+
+                <div class="o-story-map__mobile-navigation">
+                    {% for parent_region in story_map_content %}
+                        <button class="o-story-map__region-trigger o-story-map__region-trigger--mobile o-story-map__region-trigger--{{ parent_region.machine_name }}"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                aria-controls="map-{{ parent_region.machine_name }}, content-{{ parent_region.machine_name }}"
+                                data-next-focus="target-{{ parent_region.machine_name }}">
+                            {{ parent_region.label }}
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="o-story-map__regions">
+                {% for parent_region in story_map_content %}
+                    <div id="map-{{ parent_region.machine_name }}"
+                         class="o-story-map__region o-story-map__region--{{ parent_region.machine_name }}">
+                        <button id="target-{{ parent_region.machine_name }}"
+                                class="visually-hidden"
+                                tabindex="-1">
+                            {{ 'Now viewing'|t }} {{ parent_region.label }}
+                        </button>
+
+                        <button class="o-story-map__back-trigger"
+                                data-next-focus="target-world">
+                            {{ 'Back To World'|t }}
+                        </button>
+
+                        <h3 class="o-story-map__frame-heading">{{ parent_region.label }}</h3>
+
+                        <div class="o-story-map__region-wrapper">
+                            <div class="o-story-map__region-map-wrapper">
+                                <div class="o-story-map__region-map" style="aspect-ratio: {{ parent_region.aspect_ratio_x }} / {{ parent_region.aspect_ratio_y }}">
+                                    {% for child_region in parent_region.regions %}
+                                        <button id="button-{{ child_region.machine_name }}"
+                                                class="o-story-map__region-trigger o-story-map__region-trigger--{{ child_region.machine_name }}"
+                                                aria-haspopup="true"
+                                                aria-expanded="false"
+                                                aria-controls="map-{{ parent_region.machine_name }}, content-{{ child_region.machine_name }}"
+                                                data-next-focus="target-{{ child_region.machine_name }}"
+                                                style="inset-inline-start: {{ child_region.x }}%; inset-block-end: {{ child_region.y }}%;">
+                                            {{ child_region.label }}
+                                        </button>
+                                    {% endfor %}
+
+                                    {{ source('themes/custom/tufts_rii/components/03-organisms/story-map/img/map-' ~ parent_region.machine_name ~ '.svg') }}
+                                </div>
+                            </div>
+
+                            <div class="o-story-map__mobile-navigation">
+                                {% for child_region in parent_region.regions %}
+                                    <button class="o-story-map__region-trigger o-story-map__region-trigger--mobile o-story-map__region-trigger--{{ child_region.machine_name }}"
+                                            aria-haspopup="true"
+                                            aria-expanded="false"
+                                            aria-controls="map-{{ parent_region.machine_name }}, content-{{ child_region.machine_name }}, button-{{ child_region.machine_name }}"
+                                            data-next-focus="target-{{ child_region.machine_name }}">
+                                        {{ child_region.label }}
+                                    </button>
+                                {% endfor %}
+                            </div>
+
+                            <div class="o-story-map__region-content-wrapper">
+                                <div id="content-{{ parent_region.machine_name }}"
+                                     class="o-story-map__region-content o-story-map__region-content--{{ parent_region.machine_name }}"
+                                     aria-labelledby="heading-{{ parent_region.machine_name }}">
+                                    <h4 id="heading-{{ parent_region.machine_name }}" class="o-story-map__region-heading">
+                                        {{ parent_region.label }}
+                                    </h4>
+
+                                    {% if parent_region.impact is not empty %}
+                                        <h5 class="o-story-map__content-heading">{{ 'Impact'|t }}</h5>
+                                        {{ parent_region.impact }}
+                                    {% endif %}
+                                </div>
+
+                                {% for child_region in parent_region.regions %}
+                                    <div id="content-{{ child_region.machine_name }}" class="o-story-map__region-content o-story-map__region-content--{{ child_region.machine_name }}" aria-labelledby="heading-{{ child_region.machine_name }}">
+                                        <button id="target-{{ child_region.machine_name }}"
+                                                class="visually-hidden"
+                                                tabindex="-1">
+                                            {{ 'Now viewing'|t }} {{ child_region.label }}
+                                        </button>
+
+                                        <button class="o-story-map__back-trigger"
+                                                data-announce="{{ parent_region.label }}"
+                                                data-prev-region="{{ parent_region.machine_name }}"
+                                                data-next-focus="target-{{ parent_region.machine_name }}">
+                                            {{ 'Back To'|t }} {{ parent_region.label }}
+                                        </button>
+
+                                        <h4 id="heading-{{ parent_region.machine_name }}" class="o-story-map__region-heading">
+                                            {{ child_region.label }}
+                                        </h4>
+
+                                        {% if child_region.impact is not empty %}
+                                            <h5 class="o-story-map__content-heading">{{ 'Impact'|t }}</h5>
+                                            {{ child_region.impact }}
+                                        {% endif %}
+
+                                        {% if child_region.locations is not empty %}
+                                            <h5 class="o-story-map__content-heading">{{ 'Locations'|t }}</h5>
+                                            {{ child_region.locations }}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="o-story-map__list">
+                <h3 class="o-story-map__frame-heading">{{ 'Regions'|t }}</h3>
+
+                <nav class="o-story-map__navigation" aria-label="Region listing navigation" role="navigation">
+                    <ul class="o-story-map__items o-story-map__items--level-1">
+                        {% for parent_region in story_map_content %}
+                            <li class="o-story-map__item">
+                                {{ parent_region.label }}
+
+                                {% if parent_region.regions is not empty %}
+                                    <ul class="o-story-map__items o-story-map__items--level-2">
+                                        {% for child_region in parent_region.regions %}
+                                            <li class="o-story-map__item">
+                                                <button class="o-story-map__region-trigger o-story-map__region-trigger--listing o-story-map__region-trigger--{{ child_region.machine_name }}"
+                                                        aria-haspopup="true"
+                                                        aria-controls="map-{{ parent_region.machine_name }}, content-{{ child_region.machine_name }}, button-{{ child_region.machine_name }}"
+                                                        data-next-focus="target-{{ child_region.machine_name }}">
+                                                    {{ child_region.label }}
+                                                </button>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    {% endblock %}
+</div>

@@ -1,0 +1,28 @@
+$schema: https://git.drupalcode.org/project/sdc/-/raw/1.x/src/metadata.schema.json
+name: Story Map
+status: experimental
+group: Organisms
+props:
+  type: object
+  properties:
+    story_map_attributes:
+      title: Attributes
+      type: string
+    story_map_content:
+      title: Content
+      type: array
+    story_map_description:
+      title: Description
+      type: string
+    story_map_heading:
+      title: Heading
+      type: string
+  slots:
+    story_map_content:
+      title: Content
+
+libraryOverrides:
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/announce
